@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"bufio"
 	"os"
+	"time"
 )
 
 type world [][]bool
@@ -13,9 +14,10 @@ type Controller struct {
 	view                      oled.Screen
 	world, nextWorld          world
 	aliveAmounts, bornAmounts []int
+	delay                     time.Duration
 }
 
-func NewController(configPath string, aliveAmounts, bornAmounts []int, ) Controller {
+func NewController(configPath string, aliveAmounts, bornAmounts []int, delay time.Duration, ) Controller {
 	config := readCsv(configPath)
 
 	return Controller{
@@ -24,6 +26,7 @@ func NewController(configPath string, aliveAmounts, bornAmounts []int, ) Control
 		nextWorld:    newWorldFromConfig(config),
 		aliveAmounts: aliveAmounts,
 		bornAmounts:  bornAmounts,
+		delay:        delay,
 	}
 }
 
@@ -76,6 +79,8 @@ func (c *Controller) Play() {
 		c.world = c.nextWorld
 
 		c.calculateNextWorld()
+
+		time.Sleep(c.delay * time.Millisecond)
 	}
 }
 

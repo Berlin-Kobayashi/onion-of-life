@@ -5,11 +5,14 @@ import (
 	"flag"
 	"strings"
 	"strconv"
+	"time"
 )
 
 func main() {
+	var delay int
 	var rulesString string
 	flag.StringVar(&rulesString, "rule", "23/3", "The rules to apply e.g. 23/3")
+	flag.IntVar(&delay, "d", 0, "The delay between generations in milliseconds")
 
 	flag.Parse()
 
@@ -20,7 +23,7 @@ func main() {
 	aliveAmounts := toInts(strings.Split(rules[0], ""))
 	bornAmounts := toInts(strings.Split(rules[1], ""))
 
-	controller := game.NewController(args[0], aliveAmounts, bornAmounts)
+	controller := game.NewController(args[0], aliveAmounts, bornAmounts, time.Duration(delay))
 	controller.Play()
 }
 
