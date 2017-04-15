@@ -109,7 +109,7 @@ func (s *Screen) Commit() {
 }
 
 func (s *Screen) ResetCommands() {
-	s.commandQueue = make([]string, len(s.commandQueue))
+	s.commandQueue = []string{}
 }
 
 func (s *Screen) addCommand(arg ...string) {
@@ -119,5 +119,9 @@ func (s *Screen) addCommand(arg ...string) {
 
 func (s *Screen) runCommand(arg ...string) {
 	cmd := exec.Command("oled-exp", arg...)
-	cmd.Run()
+
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
 }

@@ -73,14 +73,7 @@ func newWorld() world {
 func (c *Controller) Play() {
 	for {
 		c.render()
-
-		nextWorld := newWorld()
-		for x, row := range c.world {
-			for y := range row {
-				nextWorld[x][y] = c.isCellAlive(x, y)
-			}
-		}
-		c.world = nextWorld
+		c.updateWorld()
 	}
 }
 
@@ -106,6 +99,18 @@ func (c *Controller) render() {
 		c.view.WriteByte(characterValue)
 	}
 	c.view.Commit()
+}
+
+func (c *Controller) updateWorld() {
+	nextWorld := newWorld()
+
+	for x, row := range c.world {
+		for y := range row {
+			nextWorld[x][y] = c.isCellAlive(x, y)
+		}
+	}
+
+	c.world = nextWorld
 }
 
 func (c *Controller) isCellAlive(x, y int) bool {
