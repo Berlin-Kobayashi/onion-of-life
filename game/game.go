@@ -11,18 +11,17 @@ type world [][]bool
 
 type Controller struct {
 	view                      oled.Screen
-	world                     world
+	world, nextWorld          world
 	aliveAmounts, bornAmounts []int
 }
 
 func NewController(configPath string, aliveAmounts, bornAmounts []int, ) Controller {
 	config := readCsv(configPath)
 
-	world := newWorldFromConfig(config)
-
 	return Controller{
 		view:         oled.NewScreen(),
-		world:        world,
+		world:        newWorld(),
+		nextWorld:    newWorldFromConfig(config),
 		aliveAmounts: aliveAmounts,
 		bornAmounts:  bornAmounts,
 	}
@@ -73,44 +72,55 @@ func newWorld() world {
 func (c *Controller) Play() {
 	for {
 		c.render()
-		c.updateWorld()
+
+		c.world = c.nextWorld
+
+		c.calculateNextWorld()
 	}
 }
 
 func (c *Controller) render() {
 	for y := 0; y < len(c.world[0]); y++ {
-		c.view.MoveCursorToPixel(0, y)
-
 		var characterValue byte
+		isCharacterChanged := false
+
 		for x := 0; x < len(c.world); x++ {
+			if c.world[x][y] != c.nextWorld[x][y] {
+				isCharacterChanged = true
+			}
+
 			characterX := x % oled.PixelsPerCharacter
 
 			if characterX == 0 && x != 0 {
-				c.view.WriteByte(characterValue)
-				c.view.MoveCursorToPixel(x/oled.PixelsPerCharacter, y)
+				if isCharacterChanged {
+					c.view.MoveCursorToPixel(x/oled.Rows-1, y)
+					c.view.WriteByte(characterValue)
+				}
 
 				characterValue = 0
+				isCharacterChanged = false
 			}
-			if c.world[x][y] {
+			if c.nextWorld[x][y] {
 				characterValue += 1 << byte(characterX)
 
 			}
 		}
-		c.view.WriteByte(characterValue)
+
+		if isCharacterChanged {
+			c.view.MoveCursorToPixel(oled.Rows-1, y)
+			c.view.WriteByte(characterValue)
+		}
 	}
 	c.view.Commit()
 }
 
-func (c *Controller) updateWorld() {
-	nextWorld := newWorld()
-
+func (c *Controller) calculateNextWorld() {
+	c.nextWorld = newWorld()
 	for x, row := range c.world {
 		for y := range row {
-			nextWorld[x][y] = c.isCellAlive(x, y)
+			c.nextWorld[x][y] = c.isCellAlive(x, y)
 		}
 	}
-
-	c.world = nextWorld
 }
 
 func (c *Controller) isCellAlive(x, y int) bool {
